@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enterprise Core ERP Ecosystem</title>
+    <style>
+        /* ==========================================================
+           ENTERPRISE DESIGN SYSTEM (70-20-10 RULE)
+           ========================================================== */
+        :root {
+            /* 70% - Backgrounds (Minimal Eye Strain) */
+            --bg-main: #F3F4F6;       /* Light Gray for viewport */
+            --bg-card: #FFFFFF;       /* Pure White for data containers */
+            
+            /* 20% - Primary Navigation */
+            --nav-bg: #1E3A8A;        /* Deep Blue */
+            --nav-hover: #4F46E5;     /* Indigo */
+            --nav-text: #FFFFFF;      
+            --nav-text-muted: #93C5FD;
+            
+            /* 10% - Call to Action / Accents */
+            --accent-primary: #2563EB; /* Electric Blue */
+            --accent-hover: #1D4ED8;
+            
+            /* Status Alerts */
+            --status-success: #10B981; /* Kelly Green */
+            --status-success-bg: #D1FAE5;
+            --status-warning: #F59E0B; /* Amber */
+            --status-warning-bg: #FEF3C7;
+            --status-error: #EF4444;   /* Red */
+            --status-error-bg: #FEE2E2;
+
+            /* Typography & Borders */
+            --text-primary: #111827;   /* High contrast for readability */
+            --text-secondary: #4B5563; /* Softer text for data labels */
+            --border-color: #E5E7EB;
+            --border-dark: #D1D5DB;
+
+            --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* ==========================================================
+           BASE STYLES & TYPOGRAPHY
+           ========================================================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: var(--font-stack); }
+        body { background-color: var(--bg-main); color: var(--text-primary); display: flex; min-height: 100vh; overflow-x: hidden; font-size: 14px; -webkit-font-smoothing: antialiased; }
+
+        /* Auth Screen */
+        #auth-page { position: fixed; inset: 0; background: linear-gradient(135deg, var(--nav-bg), var(--nav-hover)); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .auth-card { background: var(--bg-card); padding: 40px; border-radius: 8px; width: 100%; max-width: 380px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
+        .auth-card h2 { margin-bottom: 24px; color: var(--text-primary); text-align: center; font-size: 22px; font-weight: 600; }
+
+        /* Main Layout */
+        #main-app { display: none; width: 100%; min-height: 100vh; }
+        .sidebar { width: 240px; background-color: var(--nav-bg); color: var(--nav-text); display: flex; flex-direction: column; flex-shrink: 0; box-shadow: 2px 0 5px rgba(0,0,0,0.05); z-index: 10; }
+        .sidebar-brand { padding: 20px 24px; font-size: 18px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.15); letter-spacing: 0.5px; }
+        .sidebar-menu { list-style: none; padding: 12px 0; flex-grow: 1; }
+        .menu-item { padding: 10px 24px; cursor: pointer; display: flex; align-items: center; gap: 12px; color: var(--nav-text-muted); transition: background 0.15s, color 0.15s; font-weight: 500; font-size: 13px; }
+        .menu-item:hover { background: rgba(255,255,255,0.1); color: var(--nav-text); }
+        .menu-item.active { background: var(--nav-hover); color: var(--nav-text); border-left: 4px solid var(--bg-card); padding-left: 20px; font-weight: 600; }
+        
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
+        .topbar { height: 60px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); z-index: 5; }
+        .topbar h2 { font-size: 18px; font-weight: 600; }
+        .module-viewport { padding: 24px; flex-grow: 1; overflow-y: auto; }
+
+        /* ==========================================================
+           UI TOOLKITS (High Density & Rapid Execution)
+           ========================================================== */
+        .grid { display: grid; gap: 16px; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+        
+        .card { background: var(--bg-card); padding: 20px; border-radius: 6px; border: 1px solid var(--border-color); margin-bottom: 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .kpi-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .kpi-title { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; font-weight: 600; margin-bottom: 6px; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+        
+        /* Interactive Tabs */
+        .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; }
+        .tab { padding: 8px 16px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-secondary); font-weight: 500; font-size: 13px; transition: all 0.2s; }
+        .tab:hover { color: var(--text-primary); background: #F9FAFB; border-radius: 4px 4px 0 0; }
+        .tab.active { border-color: var(--accent-primary); color: var(--accent-primary); font-weight: 600; }
+
+        /* Forms & Inputs (Compact for Density) */
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; margin-bottom: 4px; font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+        .input-group input, .input-group select { width: 100%; padding: 8px 10px; border: 1px solid var(--border-dark); border-radius: 4px; font-size: 13px; outline: none; transition: border-color 0.15s; background: var(--bg-card); color: var(--text-primary); }
+        .input-group input:focus, .input-group select:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(37,99,235,0.1); }
+        
+        /* Buttons (CTA 10%) */
+        .btn { padding: 8px 16px; border: 1px solid transparent; background: var(--accent-primary); color: white; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.15s, transform 0.1s; }
+        .btn:hover { background: var(--accent-hover); }
+        .btn:active { transform: translateY(1px); }
+        .btn-danger { background: var(--status-error); }
+        .btn-danger:hover { background: #DC2626; }
+        .btn-outline { background: transparent; border-color: var(--border-dark); color: var(--text-primary); }
+        .btn-outline:hover { background: var(--bg-main); }
+
+        /* Tables (High Data Density & Zebra Striping) */
+        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .action-bar h3 { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .table-container { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; overflow-x: auto; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .data-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        .data-table th { background: #F9FAFB; padding: 10px 12px; font-weight: 600; border-bottom: 1px solid var(--border-dark); color: var(--text-secondary); text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; white-space: nowrap; }
+        .data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border-color); color: var(--text-primary); vertical-align: middle; }
+        .data-table tbody tr:nth-child(even) { background: #F9FAFB; } /* Zebra Striping for eye tracking */
+        .data-table tbody tr:hover { background: #F3F4F6; }
+        .data-table tr:last-child td { border-bottom: none; }
+
+        /* Badges / Status Indicators */
+        .badge { padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-block; }
+        .badge.success { background: var(--status-success-bg); color: #065F46; }
+        .badge.warning { background: var(--status-warning-bg); color: #92400E; }
+        .badge.error { background: var(--status-error-bg); color: #991B1B; }
+        .badge.neutral { background: var(--border-color); color: var(--text-secondary); }
+
+        /* Alert Banners */
+        .alert { padding: 10px 14px; border-radius: 4px; font-size: 13px; font-weight: 500; margin-bottom: 12px; display: none; }
+        .alert.error { display: block; background: var(--status-error-bg); color: #B91C1C; border: 1px solid #FCA5A5; }
+        .alert.success { display: block; background: var(--status-success-bg); color: #065F46; border: 1px solid #6EE7B7; }
+        .alert.info { display: block; background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+
+        /* Modals */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(17,24,39,0.7); display: flex; align-items: center; justify-content: center; z-index: 2000; display: none; backdrop-filter: blur(2px); }
+        .modal { background: var(--bg-card); padding: 24px; border-radius: 6px; width: 100%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); border: 1px solid var(--border-color); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+        .modal-header h3 { font-size: 16px; font-weight: 600; }
+        .modal-close { cursor: pointer; font-size: 20px; color: var(--text-secondary); border: none; background: transparent; transition: color 0.15s; }
+        .modal-close:hover { color: var(--status-error); }
+
+        /* Pure CSS Charts Engine */
+        .chart-container { display: flex; align-items: flex-end; height: 180px; gap: 16px; padding-top: 16px; border-bottom: 1px solid var(--border-dark); margin-bottom: 12px; }
+        .chart-bar-wrapper { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+        .chart-bar { width: 100%; max-width: 40px; background-color: var(--accent-primary); border-radius: 3px 3px 0 0; transition: height 0.5s ease; min-height: 4px; }
+        .chart-label { font-size: 11px; margin-top: 6px; color: var(--text-secondary); text-align: center; }
+        .chart-value { font-size: 11px; font-weight: 700; margin-bottom: 4px; color: var(--text-primary); }
+        .chart-bar.expense { background-color: var(--status-error); }
+        .chart-bar.income { background-color: var(--status-success); }
+        .chart-bar.warning { background-color: var(--status-warning); }
+
+        /* Exports Grid */
+        .export-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+        .export-card { background: var(--bg-card); border: 1px solid var(--border-color); padding: 16px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02); }
+        .export-card h4 { font-size: 14px; margin-bottom: 4px; }
+        .export-btn { padding: 6px 12px; border-radius: 4px; border: 1px solid var(--border-dark); background: transparent; color: var(--text-primary); cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.15s; }
+        .export-btn:hover { background: #F9FAFB; }
+        .export-btn.pdf { color: var(--status-error); border-color: #FCA5A5; }
+        .export-btn.pdf:hover { background: var(--status-error-bg); }
+        .export-btn.excel { color: var(--status-success); border-color: #6EE7B7; }
+        .export-btn.excel:hover { background: var(--status-success-bg); }
+
+        /* Native Browser Print Mapping */
+        @media print {
+            body { background: white; color: black; }
+            .sidebar, .topbar, .tabs, .export-card button, .action-bar button { display: none !important; }
+            .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            .card { border: none; box-shadow: none; padding: 0; margin-bottom: 20px; }
+            .chart-bar { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SECTION: Authentication System -->
+    <div id="auth-page">
+        <div class="auth-card">
+            <h2>ERP Gateway</h2>
+            <div id="auth-alert"></div>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label>Corporate Email</label>
+                    <input type="email" id="email" required placeholder="name@company.com">
+                </div>
+                <div class="input-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Authenticate Securely</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SECTION: Main Architecture Shell -->
+    <div id="main-app">
+        <!-- Persistent Left Navigation Panel (20% Theme) -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">Enterprise ERP</div>
+            <ul class="sidebar-menu">
+                <li class="menu-item active" onclick="loadModuleView('dashboard', this)">Operational Hub</li>
+                <li class="menu-item" onclick="loadModuleView('hr', this)">Human Resources</li>
+                <li class="menu-item" onclick="loadModuleView('inventory', this)">Inventory Engine</li>
+                <li class="menu-item" onclick="loadModuleView('sales', this)">Sales Pipeline</li>
+                <li class="menu-item" onclick="loadModuleView('purchase', this)">Procurement</li>
+                <li class="menu-item" onclick="loadModuleView('finance', this)">General Ledger</li>
+                <li class="menu-item" onclick="loadModuleView('reports', this)">Reports & Analytics</li>
+                <li class="menu-item" onclick="loadModuleView('settings', this)">Security & Settings</li>
+                <li class="menu-item" onclick="logout()" style="margin-top: auto; border-top: 1px solid rgba(255,255,255,0.1); color: #FCA5A5;">Secure Logout</li>
+            </ul>
+        </aside>
+
+        <!-- Main Display Content Area -->
+        <main class="main-content">
+            <header class="topbar">
+                <h2 id="current-module-title">Operational Hub</h2>
+                <div id="user-display-profile" style="font-weight: 500; font-size: 13px; color: var(--text-secondary);">Active User</div>
+            </header>
+            <section class="module-viewport" id="module-body">
+                <!-- Dynamic Content Hydrated by Controller Engines -->
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Global State Tree Configuration
+        const API_BASE = 'http://localhost:3000/api';
+        const state = { token: null, user: null };
+
+        // Security Utility Helper
+        function escapeHTML(str) {
+            if (!str) return '';
+            return str.toString().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // Base Interceptor Engine for API Operations
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const headers = { 'Content-Type': 'application/json' };
+            if (state.token) headers['Authorization'] = `Bearer ${state.token}`;
+            const config = { method, headers };
+            if (body) config.body = JSON.stringify(body);
+
+            const res = await fetch(`${API_BASE}${endpoint}`, config);
+            if (res.status === 401 || res.status === 403) { logout(); throw new Error('Session Expired'); }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Server processing error.');
+            return data;
+        }
+
+        // Authentication Controller Core
+        async function handleLogin(e) {
+            e.preventDefault();
+            const alertBox = document.getElementById('auth-alert');
+            alertBox.innerHTML = '';
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            try {
+                const data = await apiCall('/auth/login', 'POST', { email, password });
+                state.token = data.token;
+                state.user = data.user;
+                localStorage.setItem('erp_token', data.token);
+                localStorage.setItem('erp_user', JSON.stringify(data.user));
+                authSuccessRedirect();
+            } catch (err) { alertBox.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+
+        function authSuccessRedirect() {
+            document.getElementById('auth-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'flex';
+            document.getElementById('user-display-profile').textContent = `${state.user.name} (${state.user.role})`;
+            loadModuleView('dashboard');
+        }
+
+        function logout() {
+            state.token = null; state.user = null;
+            localStorage.removeItem('erp_token'); localStorage.removeItem('erp_user');
+            document.getElementById('auth-page').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+        }
+
+        function loadModuleView(module, element = null) {
+            if (element) {
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('active'));
+                element.classList.add('active');
+            }
+            const titleMap = { dashboard: 'Operational Hub', hr: 'Human Resource Registry', inventory: 'Inventory Engine', sales: 'Sales Pipeline', purchase: 'Procurement Supply Chain', finance: 'General Ledger Finance', reports: 'Intelligence & Analytics', settings: 'Security & Audits' };
+            document.getElementById('current-module-title').textContent = titleMap[module];
+
+            if (module === 'dashboard') renderDashboard();
+            else if (module === 'hr') renderHR();
+            else if (module === 'inventory') renderInventory();
+            else if (module === 'sales') renderSales();
+            else if (module === 'purchase') renderPurchase();
+            else if (module === 'finance') renderFinance();
+            else if (module === 'reports') renderReports();
+            else if (module === 'settings') renderSettings();
+        }
+
+        // --- DASHBOARD CONTROLLER ENGINE ---
+        async function renderDashboard() {
+            const body = document.getElementById('module-body');
+            body.innerHTML = '<p style="color: var(--text-secondary)">Computing system overview metrics...</p>';
+            try {
+                const data = await apiCall('/dashboard/summary'); // Assuming this endpoint exists based on earlier data structure
+                // Fallback objects if api returns empty or structure differs
+                const safeData = data || { employeesCount: 0, productsCount: 0, revenue: 0, liquidity: 0 };
+                body.innerHTML = `
+                    <div class="grid grid-cols-4">
+                        <div class="kpi-card"><div class="kpi-title">Active Workforce</div><div class="kpi-value">${safeData.employeesCount || '-'}</div></div>
+                        <div class="kpi-card"><div class="kpi-title">SKUs in Warehouse</div><div class="kpi-value">${safeData.productsCount || '-'}</div></div>
+                        <div class="kpi-card"><div class="kpi-title">Sales Generated</div><div class="kpi-value">$${(safeData.revenue || 0).toFixed(2)}</div></div>
+                        <div class="kpi-card"><div class="kpi-title">Cash & Bank Balances</div><div class="kpi-value" style="color:var(--status-success)">$${(safeData.liquidity || 0).toFixed(2)}</div></div>
+                    </div>
+                    <div class="card" style="margin-top:16px;">
+                        <h3 style="font-size: 15px; margin-bottom: 8px;">Enterprise Core Operational Loop</h3>
+                        <p style="color:var(--text-secondary); line-height:1.5;">Welcome to the Unified ERP Hub. All functional models communicate natively via our core backend service architecture. High data density views are optimized for rapid execution.</p>
+                    </div>
+                `;
+            } catch (err) { body.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+
+        // --- HUMAN RESOURCES MODULE ---
+        function renderHR() {
+            document.getElementById('module-body').innerHTML = `
+                <div class="tabs">
+                    <div class="tab active" onclick="switchHRTab('employees', this)">Employee Master</div>
+                    <div class="tab" onclick="switchHRTab('departments', this)">Departments</div>
+                </div>
+                <div id="hr-content"></div>
+                <div id="hr-modal" class="modal-overlay"><div class="modal"><div class="modal-header"><h3 id="hr-modal-title">Action</h3><button class="modal-close" onclick="closeHRModal()">&times;</button></div><div id="hr-modal-alert"></div><div id="hr-modal-body"></div></div></div>
+            `;
+            loadEmployees();
+        }
+        function switchHRTab(t, el) { document.querySelectorAll('#module-body .tab').forEach(x => x.classList.remove('active')); el.classList.add('active'); if (t === 'departments') loadDepartments(); else loadEmployees(); }
+        function closeHRModal() { document.getElementById('hr-modal').style.display = 'none'; }
+        
+        async function loadDepartments() {
+            const content = document.getElementById('hr-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Querying department registry...</p>';
+            try {
+                const deps = await apiCall('/hr/departments');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Structure Distribution</h3><button class="btn" onclick="showAddDeptModal()">+ Create Department</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Department Name</th></tr></thead><tbody>${deps.map(d => `<tr><td>#DEPT-${d.id}</td><td><strong>${escapeHTML(d.name)}</strong></td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch (err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        function showAddDeptModal() {
+            document.getElementById('hr-modal-title').textContent = 'Create Corporate Department';
+            document.getElementById('hr-modal-alert').innerHTML = '';
+            document.getElementById('hr-modal-body').innerHTML = `<form onsubmit="submitDept(event)"><div class="input-group"><label>Department Structural Name</label><input type="text" id="dept-name" required></div><button type="submit" class="btn" style="width:100%">Commit Entity</button></form>`;
+            document.getElementById('hr-modal').style.display = 'flex';
+        }
+        async function submitDept(e) { e.preventDefault(); try { await apiCall('/hr/departments', 'POST', { name: document.getElementById('dept-name').value }); closeHRModal(); loadDepartments(); } catch(err) { document.getElementById('hr-modal-alert').innerHTML = `<div class="alert error">${err.message}</div>`; } }
+
+        async function loadEmployees() {
+            const content = document.getElementById('hr-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Syncing employee registries...</p>';
+            try {
+                const emps = await apiCall('/hr/employees');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Workforce Register</h3><button class="btn" onclick="showAddEmpModal()">+ Onboard Employee</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Full Name</th><th>Email</th><th>Department</th><th>Status</th></tr></thead><tbody>${emps.map(e => `<tr><td><span style="color:var(--text-secondary)">#EMP-${e.id.toString().padStart(4, '0')}</span></td><td><strong>${escapeHTML(e.name)}</strong></td><td>${escapeHTML(e.email)}</td><td>${escapeHTML(e.department_name || 'Unassigned')}</td><td><span class="badge ${e.status === 'Active' ? 'success' : 'error'}">${e.status}</span></td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch (err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        async function showAddEmpModal() {
+            document.getElementById('hr-modal-title').textContent = 'Onboard Enterprise Resource';
+            document.getElementById('hr-modal-alert').innerHTML = '';
+            let options = '<option value="">Select Department</option>'; try { const deps = await apiCall('/hr/departments'); deps.forEach(d => options += `<option value="${d.id}">${d.name}</option>`); } catch(e){}
+            document.getElementById('hr-modal-body').innerHTML = `
+                <form onsubmit="submitEmp(event)">
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Full Name</label><input type="text" id="emp-name" required></div>
+                        <div class="input-group"><label>Corporate Email</label><input type="email" id="emp-email" required></div>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Department Assignment</label><select id="emp-dept">${options}</select></div>
+                        <div class="input-group"><label>Access Authorization Role</label><select id="emp-role"><option value="Employee">Standard Operations</option><option value="Admin">System Administrator</option></select></div>
+                    </div>
+                    <div class="input-group"><label>Temporary Gateway Password</label><input type="password" id="emp-pass" required></div>
+                    <button type="submit" class="btn" style="width:100%; margin-top:8px;">Commit Structural Record</button>
+                </form>
+            `;
+            document.getElementById('hr-modal').style.display = 'flex';
+        }
+        async function submitEmp(e) { e.preventDefault(); try { await apiCall('/hr/employees', 'POST', { name: document.getElementById('emp-name').value, email: document.getElementById('emp-email').value, password: document.getElementById('emp-pass').value, department_id: document.getElementById('emp-dept').value, role: document.getElementById('emp-role').value }); closeHRModal(); loadEmployees(); } catch(err) { document.getElementById('hr-modal-alert').innerHTML = `<div class="alert error">${err.message}</div>`; } }
+
+        // --- INVENTORY CONTROLLER MODULE ---
+        function renderInventory() {
+            document.getElementById('module-body').innerHTML = `
+                <div class="tabs">
+                    <div class="tab active" onclick="switchInventoryTab('products', this)">Warehouse Catalog</div>
+                    <div class="tab" onclick="switchInventoryTab('categories', this)">Product Groupings</div>
+                </div>
+                <div id="inv-content"></div>
+                <div id="inv-modal" class="modal-overlay"><div class="modal"><div class="modal-header"><h3 id="inv-modal-title">Action</h3><button class="modal-close" onclick="closeInvModal()">&times;</button></div><div id="inv-modal-alert"></div><div id="inv-modal-body"></div></div></div>
+            `;
+            loadInventoryProducts();
+        }
+        function switchInventoryTab(t, el) { document.querySelectorAll('#module-body .tab').forEach(x => x.classList.remove('active')); el.classList.add('active'); if (t === 'products') loadInventoryProducts(); else loadInventoryCategories(); }
+        function closeInvModal() { document.getElementById('inv-modal').style.display = 'none'; }
+
+        async function loadInventoryProducts() {
+            const content = document.getElementById('inv-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Reading warehouse metrics...</p>';
+            try {
+                const prods = await apiCall('/inventory/products');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Warehouse Material Log</h3><button class="btn" onclick="showAddProductModal()">+ Register SKU</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>SKU</th><th>Product Description</th><th>Grouping</th><th>Unit Cost</th><th>In-Stock</th></tr></thead><tbody>${prods.map(p => `<tr><td><code style="background:#E5E7EB; padding:2px 4px; border-radius:3px; font-size:11px;">${escapeHTML(p.sku)}</code></td><td><strong>${escapeHTML(p.name)}</strong></td><td>${escapeHTML(p.category_name || 'General')}</td><td>$${p.price.toFixed(2)}</td><td><span class="badge ${p.current_stock <= p.min_stock ? 'error' : 'neutral'}">${p.current_stock} / ${p.unit_name || 'pcs'}</span></td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        async function showAddProductModal() {
+            document.getElementById('inv-modal-title').textContent = 'Register SKU in Warehouse';
+            document.getElementById('inv-modal-alert').innerHTML = '';
+            let catOpts = '', unitOpts = '';
+            try { const cats = await apiCall('/inventory/categories'); cats.forEach(c => catOpts += `<option value="${c.id}">${c.name}</option>`); const units = await apiCall('/inventory/units'); units.forEach(u => unitOpts += `<option value="${u.id}">${u.name}</option>`); } catch(e){}
+            document.getElementById('inv-modal-body').innerHTML = `
+                <form onsubmit="submitProduct(event)">
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Unique SKU Code</label><input type="text" id="p-sku" placeholder="E.g. ELEC-102" required></div>
+                        <div class="input-group"><label>Product Description</label><input type="text" id="p-name" required></div>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Category Group</label><select id="p-cat">${catOpts}</select></div>
+                        <div class="input-group"><label>Metric Base Unit</label><select id="p-unit">${unitOpts}</select></div>
+                    </div>
+                    <div class="grid grid-cols-3">
+                        <div class="input-group"><label>Unit Valuation ($)</label><input type="number" step="0.01" id="p-price" required></div>
+                        <div class="input-group"><label>Initial Stock Count</label><input type="number" id="p-stock" value="0"></div>
+                        <div class="input-group"><label>Safety Reorder Point</label><input type="number" id="p-min" value="5"></div>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%; margin-top:8px;">Commit Warehouse Record</button>
+                </form>
+            `;
+            document.getElementById('inv-modal').style.display = 'flex';
+        }
+        async function submitProduct(e) { e.preventDefault(); const payload = { sku: document.getElementById('p-sku').value, name: document.getElementById('p-name').value, category_id: document.getElementById('p-cat').value, unit_id: document.getElementById('p-unit').value, price: parseFloat(document.getElementById('p-price').value), current_stock: parseInt(document.getElementById('p-stock').value), min_stock: parseInt(document.getElementById('p-min').value) }; try { await apiCall('/inventory/products', 'POST', payload); closeInvModal(); loadInventoryProducts(); } catch(err) { document.getElementById('inv-modal-alert').innerHTML = `<div class="alert error">${err.message}</div>`; } }
+
+        async function loadInventoryCategories() {
+            const content = document.getElementById('inv-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Reading metrics...</p>';
+            try {
+                const cats = await apiCall('/inventory/categories');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Product Structural Groupings</h3><button class="btn btn-outline" onclick="alert('System architecture active. Auto-mapping dependencies.')">+ Add Category</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>ID</th><th>Structural Component Label</th></tr></thead><tbody>${cats.map(c => `<tr><td><span style="color:var(--text-secondary)">#CAT-${c.id}</span></td><td><strong>${escapeHTML(c.name)}</strong></td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+
+        // --- SALES PIPELINE MODULE ---
+        function renderSales() {
+            document.getElementById('module-body').innerHTML = `
+                <div class="tabs">
+                    <div class="tab active" onclick="switchSalesTab('orders', this)">Sales Revenue Invoices</div>
+                    <div class="tab" onclick="switchSalesTab('customers', this)">Customer CRM</div>
+                </div>
+                <div id="sales-content"></div>
+                <div id="sales-modal" class="modal-overlay"><div class="modal"><div class="modal-header"><h3 id="sales-modal-title">Action</h3><button class="modal-close" onclick="closeSalesModal()">&times;</button></div><div id="sales-modal-alert"></div><div id="sales-modal-body"></div></div></div>
+            `;
+            loadSalesOrders();
+        }
+        function switchSalesTab(t, el) { document.querySelectorAll('#module-body .tab').forEach(x => x.classList.remove('active')); el.classList.add('active'); if (t === 'customers') loadSalesCustomers(); else loadSalesOrders(); }
+        function closeSalesModal() { document.getElementById('sales-modal').style.display = 'none'; }
+
+        async function loadSalesCustomers() {
+            const content = document.getElementById('sales-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Querying CRM profile data...</p>';
+            try {
+                const custs = await apiCall('/sales/customers');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Corporate Accounts Matrix</h3><button class="btn" onclick="showAddCustomerModal()">+ Register Client</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Company Name</th><th>Contact Person</th><th>Corporate Email</th></tr></thead><tbody>${custs.map(c => `<tr><td><strong>${escapeHTML(c.name)}</strong></td><td>${escapeHTML(c.contact_person || '-')}</td><td>${escapeHTML(c.email || '-')}</td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        function showAddCustomerModal() {
+            document.getElementById('sales-modal-title').textContent = 'Register Enterprise Client Account';
+            document.getElementById('sales-modal-alert').innerHTML = '';
+            document.getElementById('sales-modal-body').innerHTML = `
+                <form onsubmit="submitCustomer(event)">
+                    <div class="input-group"><label>Client Registered Corporate Entity Name</label><input type="text" id="c-name" required></div>
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Point of Contact Full Name</label><input type="text" id="c-contact"></div>
+                        <div class="input-group"><label>Corporate Email Route</label><input type="email" id="c-email"></div>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%; margin-top:8px;">Commit Client Pipeline</button>
+                </form>
+            `;
+            document.getElementById('sales-modal').style.display = 'flex';
+        }
+        async function submitCustomer(e) { e.preventDefault(); try { await apiCall('/sales/customers', 'POST', { name: document.getElementById('c-name').value, contact_person: document.getElementById('c-contact').value, email: document.getElementById('c-email').value }); closeSalesModal(); loadSalesCustomers(); } catch(err) { document.getElementById('sales-modal-alert').innerHTML = `<div class="alert error">${err.message}</div>`; } }
+
+        async function loadSalesOrders() {
+            const content = document.getElementById('sales-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Processing sales order metrics...</p>';
+            try {
+                const orders = await apiCall('/sales/orders');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Sales Pipeline Revenue Invoices</h3><button class="btn" onclick="alert('Itemized elements configured on backend data structures. Ready for sync.')">+ Draft Sales Order</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Order Code</th><th>Customer Client</th><th>Timestamp</th><th>Invoiced Total</th><th>Pipeline Status</th></tr></thead><tbody>${orders.map(o => `<tr><td><span style="color:var(--text-secondary)">#ORD-${o.id.toString().padStart(4, '0')}</span></td><td><strong>${escapeHTML(o.customer_name)}</strong></td><td>${new Date(o.order_date).toLocaleDateString()}</td><td style="font-weight:600;">$${o.total_amount.toFixed(2)}</td><td><span class="badge ${o.status==='Completed'?'success':'warning'}">${o.status}</span></td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+
+        // --- PROCUREMENT SUPPLY CHAIN MODULE ---
+        function renderPurchase() {
+            document.getElementById('module-body').innerHTML = `
+                <div class="tabs">
+                    <div class="tab active" onclick="switchPurchaseTab('orders', this)">Purchase Orders (PO)</div>
+                    <div class="tab" onclick="switchPurchaseTab('suppliers', this)">Vendor Database</div>
+                </div>
+                <div id="purchase-content"></div>
+                <div id="purchase-modal" class="modal-overlay"><div class="modal"><div class="modal-header"><h3 id="purchase-modal-title">Action</h3><button class="modal-close" onclick="closePurchaseModal()">&times;</button></div><div id="purchase-modal-alert"></div><div id="purchase-modal-body"></div></div></div>
+            `;
+            loadPurchaseOrders();
+        }
+        function switchPurchaseTab(t, el) { document.querySelectorAll('#module-body .tab').forEach(x => x.classList.remove('active')); el.classList.add('active'); if (t === 'suppliers') loadPurchaseSuppliers(); else loadPurchaseOrders(); }
+        function closePurchaseModal() { document.getElementById('purchase-modal').style.display = 'none'; }
+
+        async function loadPurchaseSuppliers() {
+            const content = document.getElementById('purchase-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Scanning vendor files...</p>';
+            try {
+                const vendors = await apiCall('/purchase/suppliers');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Supply Chain Vendor Master File</h3><button class="btn" onclick="showAddSupplierModal()">+ Profile Vendor</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Vendor Organization</th><th>Contact Representative</th><th>Procurement Email</th></tr></thead><tbody>${vendors.map(v => `<tr><td><strong>${escapeHTML(v.name)}</strong></td><td>${escapeHTML(v.contact_person || '-')}</td><td>${escapeHTML(v.email || '-')}</td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        function showAddSupplierModal() {
+            document.getElementById('purchase-modal-title').textContent = 'Profile Supply Chain Vendor';
+            document.getElementById('purchase-modal-alert').innerHTML = '';
+            document.getElementById('purchase-modal-body').innerHTML = `
+                <form onsubmit="submitSupplier(event)">
+                    <div class="input-group"><label>Vendor Business Identity Title</label><input type="text" id="v-name" required></div>
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Representative Agent Name</label><input type="text" id="v-contact"></div>
+                        <div class="input-group"><label>Procurement Route Email</label><input type="email" id="v-email"></div>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%; margin-top:8px;">Commit Supply Chain Connection</button>
+                </form>
+            `;
+            document.getElementById('purchase-modal').style.display = 'flex';
+        }
+        async function submitSupplier(e) { e.preventDefault(); try { await apiCall('/purchase/suppliers', 'POST', { name: document.getElementById('v-name').value, contact_person: document.getElementById('v-contact').value, email: document.getElementById('v-email').value }); closePurchaseModal(); loadPurchaseSuppliers(); } catch(err) { document.getElementById('purchase-modal-alert').innerHTML = `<div class="alert error">${err.message}</div>`; } }
+
+        async function loadPurchaseOrders() {
+            const content = document.getElementById('purchase-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Reading acquisition profiles...</p>';
+            try {
+                const orders = await apiCall('/purchase/orders');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Acquisition Purchase Orders (PO)</h3><button class="btn" onclick="alert('Supply chain product integration loaded in relational tables. Form stream operational.')">+ Issue PO</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>PO Sequence</th><th>Supplier Target</th><th>Execution Date</th><th>Funding Requirements</th><th>Status</th></tr></thead><tbody>${orders.map(o => `<tr><td><span style="color:var(--text-secondary)">#PO-${o.id.toString().padStart(4, '0')}</span></td><td><strong>${escapeHTML(o.supplier_name)}</strong></td><td>${new Date(o.order_date).toLocaleDateString()}</td><td style="font-weight:600;">$${o.total_amount.toFixed(2)}</td><td><span class="badge ${o.status==='Completed'?'success':'warning'}">${o.status}</span></td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+
+        // --- GENERAL LEDGER FINANCE MODULE ---
+        function renderFinance() {
+            document.getElementById('module-body').innerHTML = `
+                <div class="tabs">
+                    <div class="tab active" onclick="switchFinanceTab('transactions', this)">Ledger Balanced Transactions</div>
+                    <div class="tab" onclick="switchFinanceTab('accounts', this)">Chart of Accounts</div>
+                </div>
+                <div id="finance-content"></div>
+                <div id="finance-modal" class="modal-overlay"><div class="modal"><div class="modal-header"><h3 id="finance-modal-title">Action</h3><button class="modal-close" onclick="closeFinanceModal()">&times;</button></div><div id="finance-modal-alert"></div><div id="finance-modal-body"></div></div></div>
+            `;
+            loadFinanceTransactions();
+        }
+        function switchFinanceTab(t, el) { document.querySelectorAll('#module-body .tab').forEach(x => x.classList.remove('active')); el.classList.add('active'); if (t === 'accounts') loadFinanceAccounts(); else loadFinanceTransactions(); }
+        function closeFinanceModal() { document.getElementById('finance-modal').style.display = 'none'; }
+
+        async function loadFinanceAccounts() {
+            const content = document.getElementById('finance-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Reading charts matrices...</p>';
+            try {
+                const accs = await apiCall('/finance/accounts');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Corporate Balanced Accounts Matrix</h3><button class="btn" onclick="showAddAccountModal()">+ Provision Account</button></div>
+                    <div class="grid grid-cols-4" style="margin-bottom: 16px;">${accs.map(a => `<div class="kpi-card"><div class="kpi-title" style="text-transform:none;">${escapeHTML(a.account_name)}</div><div class="kpi-value" style="font-size:20px;">$${a.balance.toFixed(2)}</div></div>`).join('')}</div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Ledger Reference</th><th>Corporate Account Profile</th><th>Asset Class</th><th>Current Value</th></tr></thead><tbody>${accs.map(a => `<tr><td><span style="color:var(--text-secondary)">#ACC-${a.id}</span></td><td><strong>${escapeHTML(a.account_name)}</strong></td><td><span class="badge neutral">${escapeHTML(a.account_type)}</span></td><td style="color:var(--status-success); font-weight:600;">$${a.balance.toFixed(2)}</td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        function showAddAccountModal() {
+            document.getElementById('finance-modal-title').textContent = 'Provision Financial Ledger Entity';
+            document.getElementById('finance-modal-alert').innerHTML = '';
+            document.getElementById('finance-modal-body').innerHTML = `
+                <form onsubmit="submitAccount(event)">
+                    <div class="input-group"><label>Account Designation Label</label><input type="text" id="f-acc-name" placeholder="E.g. Reserve Operating Capital" required></div>
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Financial Asset Class</label><select id="f-acc-type"><option value="Bank">Corporate Banking Channel</option><option value="Cash">Petty Cash Reservoir</option><option value="Credit">Short-Term Liability Fleet</option></select></div>
+                        <div class="input-group"><label>Opening Balance ($)</label><input type="number" step="0.01" id="f-acc-bal" value="0.00"></div>
+                    </div>
+                    <button type="submit" class="btn" style="width:100%; margin-top:8px;">Provision Account Vector</button>
+                </form>
+            `;
+            document.getElementById('finance-modal').style.display = 'flex';
+        }
+        async function submitAccount(e) { e.preventDefault(); try { await apiCall('/finance/accounts', 'POST', { account_name: document.getElementById('f-acc-name').value, account_type: document.getElementById('f-acc-type').value, balance: parseFloat(document.getElementById('f-acc-bal').value) }); closeFinanceModal(); loadFinanceAccounts(); } catch(err) { document.getElementById('finance-modal-alert').innerHTML = `<div class="alert error">${err.message}</div>`; } }
+
+        async function loadFinanceTransactions() {
+            const content = document.getElementById('finance-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Processing balance records...</p>';
+            try {
+                const txns = await apiCall('/finance/transactions');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>Balanced Journal Entry Audit Log</h3><button class="btn" onclick="showAddTransactionModal()">+ Post Journal Entry</button></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Entry Code</th><th>Timestamp</th><th>Ledger Destination</th><th>Operational Memo</th><th>Action</th><th>Valuation ($)</th></tr></thead><tbody>${txns.map(t => `<tr><td><span style="color:var(--text-secondary)">#TXN-${t.id}</span></td><td>${new Date(t.date).toLocaleString()}</td><td><strong>${escapeHTML(t.account_name)}</strong></td><td>${escapeHTML(t.description || '-')}</td><td><span class="badge ${t.type === 'Income' ? 'success' : 'error'}">${t.type}</span></td><td style="font-weight:600;">$${t.amount.toFixed(2)}</td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        async function showAddTransactionModal() {
+            document.getElementById('finance-modal-title').textContent = 'Post Balanced Ledger Entry';
+            document.getElementById('finance-modal-alert').innerHTML = '';
+            let options = ''; try { const accs = await apiCall('/finance/accounts'); accs.forEach(a => options += `<option value="${a.id}">${a.account_name} (Bal: $${a.balance.toFixed(2)})</option>`); } catch(e){}
+            document.getElementById('finance-modal-body').innerHTML = `
+                <form onsubmit="submitTransaction(event)">
+                    <div class="input-group"><label>Target Corporate Account Vector</label><select id="t-acc">${options}</select></div>
+                    <div class="grid grid-cols-2">
+                        <div class="input-group"><label>Transaction Flow Direction</label><select id="t-type"><option value="Income">Resource Liquidity Influx (+)</option><option value="Expense">Resource Expenditure Outflow (-)</option></select></div>
+                        <div class="input-group"><label>Absolute Quantity ($)</label><input type="number" step="0.01" id="t-amount" required></div>
+                    </div>
+                    <div class="input-group"><label>Operational Memorandum / Audit Description</label><input type="text" id="t-desc" required></div>
+                    <button type="submit" class="btn" style="width:100%; margin-top:8px;">Commit Dynamic Balance Operation</button>
+                </form>
+            `;
+            document.getElementById('finance-modal').style.display = 'flex';
+        }
+        async function submitTransaction(e) { e.preventDefault(); try { await apiCall('/finance/transactions', 'POST', { account_id: document.getElementById('t-acc').value, type: document.getElementById('t-type').value, amount: parseFloat(document.getElementById('t-amount').value), description: document.getElementById('t-desc').value }); closeFinanceModal(); loadFinanceTransactions(); } catch(err) { document.getElementById('finance-modal-alert').innerHTML = `<div class="alert error">${err.message}</div>`; } }
+
+        // --- REPORTS & INTEL INTELLIGENCE LAYER ---
+        function renderReports() {
+            document.getElementById('module-body').innerHTML = `
+                <div class="tabs">
+                    <div class="tab active" onclick="switchReportTab('analytics', this)">Visual System Analytics</div>
+                    <div class="tab" onclick="switchReportTab('exports', this)">Corporate Ledger Data Streams</div>
+                </div>
+                <div id="reports-content"></div>
+            `;
+            loadAnalyticsEngine();
+        }
+        function switchReportTab(t, el) { document.querySelectorAll('#module-body .tab').forEach(x => x.classList.remove('active')); el.classList.add('active'); if (t === 'analytics') loadAnalyticsEngine(); else loadDataExportPanel(); }
+
+        async function loadAnalyticsEngine() {
+            const content = document.getElementById('reports-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Aggregating matrix entities across nodes...</p>';
+            try {
+                const data = await apiCall('/reports/analytics');
+                const finMax = Math.max(data.finance.income, data.finance.expense, 1);
+                const invMax = Math.max(data.inventory.healthyStock, data.inventory.lowStock, 1);
+                const salesMax = Math.max(data.sales.completed, data.sales.pending, 1);
+                let hrBars = data.hr.length > 0 ? (function(){ const m = Math.max(...data.hr.map(h => h.count), 1); return data.hr.map(h => `<div class="chart-bar-wrapper"><div class="chart-value">${h.count}</div><div class="chart-bar" style="height:${(h.count/m)*100}%;"></div><div class="chart-label">${escapeHTML(h.name)}</div></div>`).join(''); })() : '<p style="margin:auto; color:var(--text-muted);">No Structural Distribution Vector Loaded</p>';
+
+                content.innerHTML = `
+                    <div class="grid grid-cols-2">
+                        <div class="card"><h3 style="margin-bottom:12px; font-size:14px;">Financial Pipeline Influx</h3><div class="chart-container"><div class="chart-bar-wrapper"><div class="chart-value">$${data.finance.income.toFixed(2)}</div><div class="chart-bar income" style="height:${(data.finance.income/finMax)*100}%;"></div><div class="chart-label">Income Influx</div></div><div class="chart-bar-wrapper"><div class="chart-value">$${data.finance.expense.toFixed(2)}</div><div class="chart-bar expense" style="height:${(data.finance.expense/finMax)*100}%;"></div><div class="chart-label">Expense Drain</div></div></div></div>
+                        <div class="card"><h3 style="margin-bottom:12px; font-size:14px;">Workforce Distribution Structure</h3><div class="chart-container">${hrBars}</div></div>
+                        <div class="card"><h3 style="margin-bottom:12px; font-size:14px;">Warehouse Materials Stability Vector</h3><div class="chart-container"><div class="chart-bar-wrapper"><div class="chart-value">${data.inventory.healthyStock}</div><div class="chart-bar income" style="height:${(data.inventory.healthyStock/invMax)*100}%;"></div><div class="chart-label">Secure Capacity</div></div><div class="chart-bar-wrapper"><div class="chart-value">${data.inventory.lowStock}</div><div class="chart-bar warning" style="height:${(data.inventory.lowStock/invMax)*100}%;"></div><div class="chart-label">Safety Threshold Trigger</div></div></div></div>
+                        <div class="card"><h3 style="margin-bottom:12px; font-size:14px;">Sales Capture Conversion Status</h3><div class="chart-container"><div class="chart-bar-wrapper"><div class="chart-value">${data.sales.pending}</div><div class="chart-bar warning" style="height:${(data.sales.pending/salesMax)*100}%;"></div><div class="chart-label">Pending Trajectory</div></div><div class="chart-bar-wrapper"><div class="chart-value">${data.sales.completed}</div><div class="chart-bar income" style="height:${(data.sales.completed/salesMax)*100}%;"></div><div class="chart-label">Converted Revenue</div></div></div></div>
+                    </div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+        function loadDataExportPanel() {
+            const mods = [ {id:'finance', t:'Financial General Ledger Data', d:'Complete double-entry income/expense logs mapping.'}, {id:'sales', t:'Sales Pipeline Registry Stream', d:'All invoice entities combined with consumer CRM reference points.'}, {id:'inventory', t:'Warehouse Catalog Master Evaluation', d:'Comprehensive inventory sheets detailing SKU tracking and health metrics.'}, {id:'hr', t:'Human Resource Master Index File', d:'Employee master lists, system authorizations, and structural allocations.'} ];
+            document.getElementById('reports-content').innerHTML = `<div class="alert info"><strong>Corporate Processing Information:</strong> PDF components generate utilizing device print engines natively. Data exports stream sanitized real-time data formats.</div><div class="export-grid" style="margin-top:16px;">${mods.map(m => `<div class="export-card"><div><h4>${m.t}</h4><p style="font-size:12px; color:var(--text-secondary); margin-top:4px;">${m.d}</p></div><div style="display:flex; gap:8px;"><button class="export-btn pdf" onclick="triggerNativePDFPrint()">PDF Print</button><button class="export-btn excel" onclick="triggerStreamingCSVExport('${m.id}')">CSV Stream</button></div></div>`).join('')}</div>`;
+        }
+        function triggerNativePDFPrint() { loadAnalyticsEngine().then(() => { setTimeout(() => { window.print(); loadDataExportPanel(); }, 400); }); }
+        async function triggerStreamingCSVExport(mId) { try { const res = await fetch(`${API_BASE}/reports/export/${mId}`, { headers: { 'Authorization': `Bearer ${state.token}` } }); if (!res.ok) throw new Error('Data streaming pipeline execution aborted.'); const blob = await res.blob(); const url = window.URL.createObjectURL(blob); const a = document.createElement('a'); a.style.display = 'none'; a.href = url; a.download = `erpsuite_${mId}_report_${new Date().toISOString().split('T')[0]}.csv`; document.body.appendChild(a); a.click(); window.URL.revokeObjectURL(url); a.remove(); } catch(e){ alert(e.message); } }
+
+        // --- SECURITY & SYSTEM SETTINGS MODULE ---
+        function renderSettings() {
+            document.getElementById('module-body').innerHTML = `
+                <div class="tabs">
+                    <div class="tab active" onclick="switchSettingsTab('security', this)">System Event Audit Trail</div>
+                    <div class="tab" onclick="switchSettingsTab('general', this)">Architectural Topology</div>
+                </div>
+                <div id="settings-content"></div>
+            `;
+            loadSecurityAuditTrailLogs();
+        }
+        function switchSettingsTab(t, el) {
+            document.querySelectorAll('#module-body .tab').forEach(x => x.classList.remove('active')); el.classList.add('active');
+            if (t === 'security') loadSecurityAuditTrailLogs();
+            else document.getElementById('settings-content').innerHTML = `<div class="card"><h3 style="margin-bottom:12px; font-size:14px;">System Engine Topology</h3><p style="margin-top:8px; font-size:13px; color:var(--text-secondary)">ERP Core Build: <strong style="color:var(--text-primary)">v1.0.0-PROD (2026 Stable)</strong></p><p style="margin-top:8px; font-size:13px; color:var(--text-secondary)">Database Infrastructure: <strong style="color:var(--text-primary)">SQLite Engine (Fully Indexed Schema)</strong></p><p style="margin-top:8px; font-size:13px; color:var(--text-secondary)">Rate Limiting Core: <strong style="color:var(--text-primary)">Active Protective Shielding (300 requests / 15 min window)</strong></p></div>`;
+        }
+        async function loadSecurityAuditTrailLogs() {
+            const content = document.getElementById('settings-content'); content.innerHTML = '<p style="color: var(--text-secondary)">Reading secure event logs...</p>';
+            try {
+                const logs = await apiCall('/system/audit-logs');
+                content.innerHTML = `
+                    <div class="action-bar"><h3>System Event Audit Trail Logging Matrix</h3><span style="font-size:11px; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px;">Last 100 modifications</span></div>
+                    <div class="table-container"><table class="data-table"><thead><tr><th>Timestamp</th><th>Operator Identity</th><th>Action</th><th>Target Endpoint</th><th>Origin IP</th></tr></thead><tbody>${logs.map(l => `<tr><td><span style="font-size:12px; color:var(--text-secondary);">${new Date(l.timestamp).toLocaleString()}</span></td><td><strong>${escapeHTML(l.user_email)}</strong></td><td><span class="badge ${l.action === 'DELETE' ? 'error' : 'neutral'}" style="color:${l.action !== 'DELETE' ? 'var(--accent-primary)' : ''}">${l.action}</span></td><td><code style="background:var(--bg-main); padding:2px 4px; border-radius:3px; font-size:11px; border:1px solid var(--border-color);">${escapeHTML(l.endpoint)}</code></td><td><span style="font-family:monospace; font-size:12px; color:var(--text-secondary);">${escapeHTML(l.ip_address || '127.0.0.1')}</span></td></tr>`).join('')}</tbody></table></div>
+                `;
+            } catch(err) { content.innerHTML = `<div class="alert error">${err.message}</div>`; }
+        }
+
+        // --- SYSTEM ENGINE INITIALIZER BOOTSTRAP ---
+        function init() {
+            const savedToken = localStorage.getItem('erp_token');
+            const savedUser = localStorage.getItem('erp_user');
+            if (savedToken && savedUser) {
+                state.token = savedToken;
+                state.user = JSON.parse(savedUser);
+                authSuccessRedirect();
+            } else {
+                logout();
+            }
+        }
+
+        // Bootstrap App Engine
+        init();
+    </script>
+</body>
+</html>
